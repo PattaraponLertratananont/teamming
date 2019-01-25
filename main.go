@@ -17,16 +17,17 @@ import (
 
 //* Model
 type Profile struct {
-	Name       string `json:"name" bson:"name,omitempty"`
-	NameTH     string `json:"nameth" bson:"nameth,omitempty"`
-	Nickname   string `json:"nickname" bson:"nickname,omitempty"`
-	NicknameTH string `json:"nicknameth" bson:"nicknameth,omitempty"`
-	Team       string `json:"team" bson:"team,omitempty"`
-	Company    string `json: "company" bson:"company"`
-	Telno      string `json:"telno" bson:"telno,omitempty"`
-	Email      string `json:"email" bson:"email,omitempty"`
-	OS         string `json:"os" bson:"os"`
-	MobileOS   string `jsoon: "mobileos" bson: "mobileos"`
+	Avatar       string `json:"avatar" bson:"avatar,omitempty"`
+	Name         string `json:"name" bson:"name,omitempty"`
+	NameTH       string `json:"nameth" bson:"nameth,omitempty"`
+	Nickname     string `json:"nickname" bson:"nickname,omitempty"`
+	NicknameTH   string `json:"nicknameth" bson:"nicknameth,omitempty"`
+	Team         string `json:"team" bson:"team,omitempty"`
+	Company      string `json: "company" bson:"company"`
+	Telno        string `json:"telno" bson:"telno,omitempty"`
+	Email        string `json:"email" bson:"email,omitempty"`
+	OsLogo       string `json:"oslogo" bson:"oslogo"`
+	MobileosLogo string `jsoon: "mobileoslogo" bson: "mobileoslogo"`
 }
 
 const (
