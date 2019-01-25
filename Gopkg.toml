@@ -40,3 +40,8 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[metadata.heroku]
+  root-package = "github.com/MuyoNz/teamming"
+  go-version = "1.11.4"
+  install = [ "./..." ]
