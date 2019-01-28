@@ -17,17 +17,17 @@ import (
 
 //* Model
 type Profile struct {
-	Avatar       string `json:"avatar" bson:"avatar"`
-	Name         string `json:"name" bson:"name"`
-	NameTH       string `json:"nameth" bson:"nameth"`
-	Nickname     string `json:"nickname" bson:"nickname"`
-	NicknameTH   string `json:"nicknameth" bson:"nicknameth"`
-	Team         string `json:"team" bson:"team"`
-	Company      string `json: "company" bson:"company"`
-	Telno        string `json:"telno" bson:"telno`
-	Email        string `json:"email" bson:"email`
-	OsLogo       string `json:"oslogo" bson:"oslogo"`
-	MobileosLogo string `jsoon: "mobileoslogo" bson: "mobileoslogo"`
+	avatar       string `json:"avatar" bson:"avatar"`
+	name         string `json:"name" bson:"name"`
+	nameTH       string `json:"nameth" bson:"nameth"`
+	nickname     string `json:"nickname" bson:"nickname"`
+	nicknameTH   string `json:"nicknameth" bson:"nicknameth"`
+	team         string `json:"team" bson:"team"`
+	company      string `json: "company" bson:"company"`
+	telno        string `json:"telno" bson:"telno`
+	email        string `json:"email" bson:"email`
+	oslogo       string `json:"oslogo" bson:"oslogo"`
+	mobileoslogo string `jsoon: "mobileoslogo" bson: "mobileoslogo"`
 }
 
 const (
@@ -49,7 +49,7 @@ func main() {
 	//+ Route =>handler
 	//* Hi!
 	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hi!, from mongod+API(echo)")
+		return c.String(http.StatusOK, "Welcome to api teammate")
 	})
 	//* Query all data
 	e.GET("/read", Getdata)
