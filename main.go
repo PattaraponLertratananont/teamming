@@ -17,6 +17,7 @@ import (
 
 //* Model
 type Profile struct {
+	Id	     string `json:"id" bson:"id,omitempty"`
 	Avatar       string `json:"avatar" bson:"avatar,omitempty"`
 	Name         string `json:"name" bson:"name,omitempty"`
 	NameTH       string `json:"nameth" bson:"nameth,omitempty"`
