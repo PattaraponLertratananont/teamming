@@ -17,16 +17,15 @@ import (
 
 //* Model
 type Profile struct {
-	Id	     string `json:"id" bson:"id,omitempty"`
-	Avatar       string `json:"avatar" bson:"avatar,omitempty"`
-	Name         string `json:"name" bson:"name,omitempty"`
-	NameTH       string `json:"nameth" bson:"nameth,omitempty"`
-	Nickname     string `json:"nickname" bson:"nickname,omitempty"`
-	NicknameTH   string `json:"nicknameth" bson:"nicknameth,omitempty"`
-	Team         string `json:"team" bson:"team,omitempty"`
+	Avatar       string `json:"avatar" bson:"avatar"`
+	Name         string `json:"name" bson:"name"`
+	NameTH       string `json:"nameth" bson:"nameth"`
+	Nickname     string `json:"nickname" bson:"nickname"`
+	NicknameTH   string `json:"nicknameth" bson:"nicknameth"`
+	Team         string `json:"team" bson:"team"`
 	Company      string `json: "company" bson:"company"`
-	Telno        string `json:"telno" bson:"telno,omitempty"`
-	Email        string `json:"email" bson:"email,omitempty"`
+	Telno        string `json:"telno" bson:"telno`
+	Email        string `json:"email" bson:"email`
 	OsLogo       string `json:"oslogo" bson:"oslogo"`
 	MobileosLogo string `jsoon: "mobileoslogo" bson: "mobileoslogo"`
 }
