@@ -23,11 +23,11 @@ type Profile struct {
 	Nickname     string `json:"nickname" bson:"nickname"`
 	NicknameTH   string `json:"nicknameth" bson:"nicknameth"`
 	Team         string `json:"team" bson:"team"`
-	Company      string `json: "company" bson:"company"`
+	Company      string `json:"company" bson:"company"`
 	Telno        string `json:"telno" bson:"telno`
 	Email        string `json:"email" bson:"email`
 	Oslogo       string `json:"oslogo" bson:"oslogo"`
-	Mobileoslogo string `jsoon: "mobileoslogo" bson: "mobileoslogo"`
+	Mobileoslogo string `json:"mobileoslogo" bson: "mobileoslogo"`
 }
 
 const (
