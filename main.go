@@ -17,20 +17,20 @@ import (
 
 //* Model
 type Profile struct {
-	ID           bson.ObjectId json:"id" bson:"_id,omitempty"
-	Avatar       string        json:"avatar" bson:"avatar,omitempty"
-	Name         string        json:"name" bson:"name,omitempty"
-	Nameth       string        json:"nameth" bson:"nameth,omitempty"
-	Nickname     string        json:"nickname" bson:"nickname,omitempty"
-	Nicknameth   string        json:"nicknameth" bson:"nicknameth,omitempty"
-	Telno        string        json:"telno" bson:"telno,omitempty"
-	Email        string        json:"email" bson:"email,omitempty"
-	Team         string        json:"team" bson:"team,omitempty"
-	Company      string        json:"company" bson:"company"
-	Oslogo       string        json:"oslogo" bson:"oslogo"
-	Mobileoslogo string        json:"mobileoslogo" bson:"mobileoslogo"
-	Locate       string        json:"locate" bson:"locate"
-	Time         string        json:"time" bson:"time"
+	ID           bson.ObjectId `json:"id" bson:"_id,omitempty"`
+	Avatar       string        `json:"avatar" bson:"avatar,omitempty"`
+	Name         string        `json:"name" bson:"name,omitempty"`
+	Nameth       string        `json:"nameth" bson:"nameth,omitempty"`
+	Nickname     string        `json:"nickname" bson:"nickname,omitempty"`
+	Nicknameth   string        `json:"nicknameth" bson:"nicknameth,omitempty"`
+	Telno        string        `json:"telno" bson:"telno,omitempty"`
+	Email        string        `json:"email" bson:"email,omitempty"`
+	Team         string        `json:"team" bson:"team,omitempty"`
+	Company      string        `json:"company" bson:"company"`
+	Oslogo       string        `json:"oslogo" bson:"oslogo"`
+	Mobileoslogo string        `json:"mobileoslogo" bson:"mobileoslogo"`
+	Locate       string        `json:"locate" bson:"locate"`
+	Time         string        `json:"time" bson:"time"`
 }
 
 const (
