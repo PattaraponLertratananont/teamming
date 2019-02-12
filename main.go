@@ -5,6 +5,7 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -17,8 +18,8 @@ import (
 
 //* Model
 type Profile struct {
-	Username     string	   `json:"username" bson:"username"`
-	Password     string    	   `json:"password" bson:"password"`
+	Username     string        `json:"username" bson:"username"`
+	Password     string        `json:"password" bson:"password"`
 	ID           bson.ObjectId `json:"id" bson:"_id"`
 	Avatar       string        `json:"avatar" bson:"avatar"`
 	Name         string        `json:"name" bson:"name"`
@@ -95,4 +96,35 @@ func Getdata(c echo.Context) (err error) {
 
 	return c.JSON(http.StatusOK, profiles)
 
+}
+func Postdata(c echo.Context) (err error) {
+	tlsConfig := &tls.Config{}
+	dialInfo, err := mgo.ParseURL(mongo_host)
+
+	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		return tls.Dial("tcp", addr.String(), tlsConfig)
+	}
+
+	session, err := mgo.DialWithInfo(dialInfo)
+	if err != nil {
+		fmt.Println("Can't connect database:", err)
+		return c.String(http.StatusInternalServerError, "Oh!, Can't connect database.")
+	}
+	defer session.Close()
+
+	var profiles *model.Profile
+	err = c.Bind(&profiles) //* Receive data from Body(API)
+	if err != nil {
+		log.Println("Error: from c.Bind()")
+		return c.String(http.StatusInternalServerError, "Error: from c.Bind()")
+	}
+	if profiles.Name == "" || profiles.Telno == "" { //* Forbid blank name and telno.
+		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "invalid to or message fields"}
+	}
+
+	err = session.DB(dbname).C(collection).Insert(profiles) //* Choose database, collection and insert data
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Error! <=from Insert mongo.")
+	}
+	return c.JSON(http.StatusCreated, "Post successfully!") //* Done!
 }
