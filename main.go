@@ -3,8 +3,15 @@ package main
 //! Golang(API) =>Echo + Mondgo Atlas
 
 import (
+	"bufio"
+	"bytes"
 	"crypto/tls"
+	"encoding/base64"
 	"fmt"
+	"image"
+	"image/jpeg"
+	"image/png"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -18,9 +25,9 @@ import (
 
 //* Model
 type Profile struct {
+	ID           bson.ObjectId `json:"id" bson:"_id"`
 	Username     string        `json:"username" bson:"username"`
 	Password     string        `json:"password" bson:"password"`
-	ID           bson.ObjectId `json:"id" bson:"_id"`
 	Avatar       string        `json:"avatar" bson:"avatar"`
 	Name         string        `json:"name" bson:"name"`
 	Nameth       string        `json:"nameth" bson:"nameth"`
@@ -34,6 +41,11 @@ type Profile struct {
 	Mobileoslogo string        `json:"mobileoslogo" bson:"mobileoslogo"`
 	Locate       string        `json:"locate" bson:"locate"`
 	Time         string        `json:"time" bson:"time"`
+}
+type ImageProfile struct {
+	ID       bson.ObjectId `json:"id" bson:"_id,omitempty"`
+	Username string        `json:"username" bson:"username,omitempty"`
+	Avatar   string        `json:"avatar" bson:"avatar,omitempty"`
 }
 
 const (
@@ -59,6 +71,9 @@ func main() {
 	})
 	//* Query all data
 	e.GET("/read", Getdata)
+	e.Post("/post", Postdata)
+	e.GET("/image/:username", GetImage)
+	e.Port("/upload", UploadImage)
 
 	//+ Start server
 	e.Logger.Fatal(e.Start(getPort()))
@@ -127,4 +142,82 @@ func Postdata(c echo.Context) (err error) {
 		return c.String(http.StatusInternalServerError, "Error! <=from Insert mongo.")
 	}
 	return c.JSON(http.StatusCreated, "Post successfully!") //* Done!
+}
+
+func GetImage(c echo.Context) (err error) {
+	tlsConfig := &tls.Config{}
+	dialInfo, err := mgo.ParseURL(mongo_host)
+
+	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		return tls.Dial("tcp", addr.String(), tlsConfig)
+	}
+
+	session, err := mgo.DialWithInfo(dialInfo)
+	if err != nil {
+		fmt.Println("Can't connect database:", err)
+		return c.String(http.StatusInternalServerError, "Oh!, Can't connect database.")
+	}
+	defer session.Close()
+	username := c.Param("username")
+	//img, err := h.FindByUsername(username)
+	fmt.Println(username)
+	var imagepro *ImageProfile
+	s := session.DB(dbname).C("image")                                                            //* Choose Database and Collection
+	err = s.Find(bson.M{"username": string(username)}).Select(bson.M{"avatar": 1}).One(&imagepro) //* Delve all data
+	if err != nil {
+		fmt.Println("Error query mongo:", err)
+	}
+	img2html := "<html><body><img src=\"data:image/png;base64," + imagepro.Avatar + "\" /></body></html>"
+	return c.HTML(http.StatusOK, img2html) //* Done (return data to API)
+}
+
+func UploadImage(c echo.Context) (err error) {
+	tlsConfig := &tls.Config{}
+	dialInfo, err := mgo.ParseURL(mongo_host)
+
+	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		return tls.Dial("tcp", addr.String(), tlsConfig)
+	}
+
+	session, err := mgo.DialWithInfo(dialInfo)
+	if err != nil {
+		fmt.Println("Can't connect database:", err)
+		return c.String(http.StatusInternalServerError, "Oh!, Can't connect database.")
+	}
+	defer src.Close()
+	reader := bufio.NewReader(src)
+	content, _ := ioutil.ReadAll(reader)
+	img, _, err := image.Decode(bytes.NewReader(content))
+	if err != nil {
+		m := resize.Resize(250, 250, img, resize.Lanczos3)
+		buf := new(bytes.Buffer)
+		err = png.Encode(buf, m)
+		imageBit := buf.Bytes()
+		photoBase64 := base64.StdEncoding.EncodeToString(imageBit)
+		fmt.Println(photoBase64)
+		imgprofile.Avatar = photoBase64
+		if imgprofile.Username == "" { //* Forbid blank name and telno.
+			return &echo.HTTPError{Code: http.StatusBadRequest, Message: "invalid to or message fields"}
+		}
+		err = session.DB(dbname).C("image").Insert(imgprofile) //* Choose database, collection and insert data
+		if err != nil {
+			return c.String(http.StatusInternalServerError, "Error! <=from Insert mongo.")
+		}
+		return c.JSON(http.StatusCreated, imgprofile)
+	}
+	m := resize.Resize(250, 250, img, resize.Lanczos3)
+	buf := new(bytes.Buffer)
+	err = jpeg.Encode(buf, m, nil)
+	imageBit := buf.Bytes()
+	photoBase64 := base64.StdEncoding.EncodeToString(imageBit)
+	fmt.Println(photoBase64)
+	imgprofile.Avatar = photoBase64
+	if imgprofile.Username == "" { //* Forbid blank name and telno.
+		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "invalid to or message fields"}
+	}
+	err = session.DB(dbname).C("image").Insert(imgprofile) //* Choose database, collection and insert data
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Error! <=from Insert mongo.")
+	}
+	return c.JSON(http.StatusCreated, imgprofile) //* Done!
 }
