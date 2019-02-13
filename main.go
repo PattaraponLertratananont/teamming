@@ -185,6 +185,17 @@ func UploadImage(c echo.Context) (err error) {
 		return c.String(http.StatusInternalServerError, "Oh!, Can't connect database.")
 	}
 	defer src.Close()
+	var imgprofile model.ImageProfile
+	imgprofile.Username = c.FormValue("username")
+	file, err := c.FormFile("avatar")
+	if err != nil {
+		return err
+	}
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
 	reader := bufio.NewReader(src)
 	content, _ := ioutil.ReadAll(reader)
 	img, _, err := image.Decode(bytes.NewReader(content))
