@@ -44,13 +44,20 @@ type Profile struct {
 	Time         string        `json:"time" bson:"time"`
 }
 
+// ImageProfile is struct to update detail in data
+type ImageProfile struct {
+	Username string `json:"username" bson:"username"`
+	Avatar   string `json:"avatar" bson:"avatar"`
+}
+
 const (
+	//mongoHost = "mongodb://127.0.0.1:27017"
 	mongoHost = "mongodb://admin:muyon@teamming-shard-00-00-odfpd.mongodb.net:27017,teamming-shard-00-01-odfpd.mongodb.net:27017,teamming-shard-00-02-odfpd.mongodb.net:27017/test?&replicaSet=Teamming-shard-0&authSource=admin"
 )
 
 const (
-	dbname     = "teammate"
-	collection = "detail"
+	dbname     = "user"
+	collection = "users"
 )
 
 func main() {
@@ -72,6 +79,7 @@ func main() {
 	e.GET("/read", Getdata)
 	e.POST("/post", Postdata)
 	e.PUT("/image/upload", UploadImage)
+	e.GET("/image/:username", GetImage)
 
 	// Start server
 	e.Logger.Fatal(e.Start(getPort()))
@@ -101,9 +109,8 @@ func Getdata(c echo.Context) (err error) {
 	}
 	defer session.Close()
 
-	s := session.DB("teamming").C("detail")
 	var profiles []Profile
-	err = s.Find(bson.M{}).Limit(100).All(&profiles)
+	err = session.DB(dbname).C(collection).Find(bson.M{}).Limit(100).All(&profiles)
 	if err != nil {
 		fmt.Println("Error query mongo:", err)
 	}
@@ -129,15 +136,12 @@ func Postdata(c echo.Context) (err error) {
 	defer session.Close()
 
 	var profiles Profile
+	profiles.ID = bson.NewObjectId()
 	err = c.Bind(&profiles) //* Receive data from Body(API)
 	if err != nil {
 		log.Println("Error: from c.Bind()")
 		return c.String(http.StatusInternalServerError, "Error: from c.Bind()")
 	}
-	if profiles.Name == "" || profiles.Telno == "" { //* Forbid blank name and telno.
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "invalid to or message fields"}
-	}
-
 	err = session.DB(dbname).C(collection).Insert(profiles) //* Choose database, collection and insert data
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Error! <=from Insert mongo.")
@@ -181,30 +185,58 @@ func UploadImage(c echo.Context) (err error) {
 		err = png.Encode(buf, imageResized)
 		imageBit := buf.Bytes()
 		photoBase64 := base64.StdEncoding.EncodeToString(imageBit)
-		fmt.Println(photoBase64)
+		//fmt.Println(photoBase64)
 		imgprofile.Avatar = photoBase64
 		if imgprofile.Username == "" { //* Forbid blank name and telno.
 			return &echo.HTTPError{Code: http.StatusBadRequest, Message: "invalid to or message fields"}
 		}
-		err = session.DB(dbname).C("detail").Update(bson.M{"username": imgprofile.Username}, bson.M{"avatar": imgprofile.Avatar}) //* Choose database, collection and insert data
+		err = session.DB(dbname).C(collection).Update(bson.M{"username": string(imgprofile.Username)}, bson.M{"$set": bson.M{"avatar": string(imgprofile.Avatar)}}) //* Choose database, collection and insert data
 		if err != nil {
-			return c.String(http.StatusInternalServerError, "Error! <=from Insert mongo.")
+			return c.String(http.StatusInternalServerError, "Error! <=from Update mongo.")
 		}
-		return c.JSON(http.StatusCreated, imgprofile)
+		return c.JSON(http.StatusCreated, "Update successfully!")
 	}
 	imageResized := resize.Resize(250, 250, img, resize.Lanczos3)
 	buf := new(bytes.Buffer)
 	err = jpeg.Encode(buf, imageResized, nil)
 	imageBit := buf.Bytes()
 	photoBase64 := base64.StdEncoding.EncodeToString(imageBit)
-	fmt.Println(photoBase64)
+	//fmt.Println(photoBase64)
 	imgprofile.Avatar = photoBase64
 	if imgprofile.Username == "" { //* Forbid blank name and telno.
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "invalid to or message fields"}
 	}
-	err = session.DB(dbname).C("detail").Update(bson.M{"username": imgprofile.Username}, bson.M{"avatar": imgprofile.Avatar}) //* Choose database, collection and insert data
+	err = session.DB(dbname).C(collection).Update(bson.M{"username": string(imgprofile.Username)}, bson.M{"$set": bson.M{"avatar": string(imgprofile.Avatar)}}) //* Choose database, collection and insert data
 	if err != nil {
-		return c.String(http.StatusInternalServerError, "Error! <=from Insert mongo.")
+		return c.String(http.StatusInternalServerError, "Error! <=from Update mongo.")
 	}
-	return c.JSON(http.StatusCreated, imgprofile) //* Done!
+	return c.JSON(http.StatusCreated, "Update successfully!") //* Done!
+}
+
+// GetImage using for get image in mongo atlas
+func GetImage(c echo.Context) (err error) {
+	tlsConfig := &tls.Config{}
+	dialInfo, err := mgo.ParseURL(mongoHost)
+
+	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		return tls.Dial("tcp", addr.String(), tlsConfig)
+	}
+
+	session, err := mgo.DialWithInfo(dialInfo)
+	if err != nil {
+		fmt.Println("Can't connect database:", err)
+		return c.String(http.StatusInternalServerError, "Oh!, Can't connect database.")
+	}
+	defer session.Close()
+	username := c.Param("username")
+	//img, err := h.FindByUsername(username)
+	fmt.Println(username)
+	var imagepro Profile
+
+	err = session.DB(dbname).C(collection).Find(bson.M{"username": string(username)}).Select(bson.M{"avatar": 1}).One(&imagepro) //* Delve all data
+	if err != nil {
+		fmt.Println("Error query mongo:", err)
+	}
+	img2html := "<html><body><img src=\"data:image/png;base64," + imagepro.Avatar + "\" /></body></html>"
+	return c.HTML(http.StatusOK, img2html) //* Done (return data to API)
 }
