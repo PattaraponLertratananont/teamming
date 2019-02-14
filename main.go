@@ -79,7 +79,7 @@ func main() {
 	e.GET("/read", Getdata)
 	e.POST("/post", Postdata)
 	e.GET("/image/:username", GetImage)
-	e.PUT("/image/upload", UploadImage)
+	e.POST("/image/upload", UploadImage)
 
 	// Start server
 	e.Logger.Fatal(e.Start(getPort()))
@@ -168,6 +168,7 @@ func GetImage(c echo.Context) (err error) {
 		return c.String(http.StatusInternalServerError, "Oh!, Can't connect database.")
 	}
 	defer session.Close()
+	//image get
 	username := c.Param("username")
 	//img, err := h.FindByUsername(username)
 	fmt.Println(username)
@@ -196,6 +197,7 @@ func UploadImage(c echo.Context) (err error) {
 		return c.String(http.StatusInternalServerError, "Oh!, Can't connect database.")
 	}
 	defer session.Close()
+	// image upload
 	var imgprofile ImageProfile
 	imgprofile.Username = c.FormValue("username")
 	file, err := c.FormFile("avatar")
