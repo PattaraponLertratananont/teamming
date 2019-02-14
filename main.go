@@ -19,11 +19,12 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/nfnt/resize"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
-//* Model
+// Profile is struct to get detail form data
 type Profile struct {
 	ID           bson.ObjectId `json:"id" bson:"_id"`
 	Username     string        `json:"username" bson:"username"`
@@ -42,6 +43,8 @@ type Profile struct {
 	Locate       string        `json:"locate" bson:"locate"`
 	Time         string        `json:"time" bson:"time"`
 }
+
+// ImageProfile is struct to get image form data
 type ImageProfile struct {
 	ID       bson.ObjectId `json:"id" bson:"_id,omitempty"`
 	Username string        `json:"username" bson:"username,omitempty"`
@@ -49,14 +52,19 @@ type ImageProfile struct {
 }
 
 const (
-	mongo_host = "mongodb://admin:muyon@teamming-shard-00-00-odfpd.mongodb.net:27017,teamming-shard-00-01-odfpd.mongodb.net:27017,teamming-shard-00-02-odfpd.mongodb.net:27017/test?&replicaSet=Teamming-shard-0&authSource=admin"
+	mongoHost = "mongodb://admin:muyon@teamming-shard-00-00-odfpd.mongodb.net:27017,teamming-shard-00-01-odfpd.mongodb.net:27017,teamming-shard-00-02-odfpd.mongodb.net:27017/test?&replicaSet=Teamming-shard-0&authSource=admin"
+)
+
+const (
+	dbname     = "teammate"
+	collection = "detail"
 )
 
 func main() {
-	//+ Echo instance
+	// Echo instance
 	e := echo.New()
 
-	//+ Middleware
+	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -64,32 +72,31 @@ func main() {
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 	}))
 
-	//+ Route =>handler
-	//* Hi!
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Welcome to api teammate")
 	})
-	//* Query all data
+	// Query all data
 	e.GET("/read", Getdata)
-	e.Post("/post", Postdata)
+	e.POST("/post", Postdata)
 	e.GET("/image/:username", GetImage)
-	e.Port("/upload", UploadImage)
+	e.PUT("/image/upload", UploadImage)
 
-	//+ Start server
+	// Start server
 	e.Logger.Fatal(e.Start(getPort()))
 }
 func getPort() string {
-	var port = os.Getenv("PORT") // ----> (A)
+	var port = os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "1323"
 		fmt.Println("No Port In Heroku" + port)
 	}
-	return ":" + port // ----> (B)
+	return ":" + port
 }
 
+// Getdata using for get data form mongo atlas
 func Getdata(c echo.Context) (err error) {
 	tlsConfig := &tls.Config{}
-	dialInfo, err := mgo.ParseURL(mongo_host)
+	dialInfo, err := mgo.ParseURL(mongoHost)
 
 	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
 		return tls.Dial("tcp", addr.String(), tlsConfig)
@@ -112,9 +119,11 @@ func Getdata(c echo.Context) (err error) {
 	return c.JSON(http.StatusOK, profiles)
 
 }
+
+// Postdata using for post data to mongo atlas
 func Postdata(c echo.Context) (err error) {
 	tlsConfig := &tls.Config{}
-	dialInfo, err := mgo.ParseURL(mongo_host)
+	dialInfo, err := mgo.ParseURL(mongoHost)
 
 	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
 		return tls.Dial("tcp", addr.String(), tlsConfig)
@@ -127,7 +136,7 @@ func Postdata(c echo.Context) (err error) {
 	}
 	defer session.Close()
 
-	var profiles *model.Profile
+	var profiles Profile
 	err = c.Bind(&profiles) //* Receive data from Body(API)
 	if err != nil {
 		log.Println("Error: from c.Bind()")
@@ -144,9 +153,10 @@ func Postdata(c echo.Context) (err error) {
 	return c.JSON(http.StatusCreated, "Post successfully!") //* Done!
 }
 
+// GetImage using for get image form mongo atlas
 func GetImage(c echo.Context) (err error) {
 	tlsConfig := &tls.Config{}
-	dialInfo, err := mgo.ParseURL(mongo_host)
+	dialInfo, err := mgo.ParseURL(mongoHost)
 
 	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
 		return tls.Dial("tcp", addr.String(), tlsConfig)
@@ -171,9 +181,10 @@ func GetImage(c echo.Context) (err error) {
 	return c.HTML(http.StatusOK, img2html) //* Done (return data to API)
 }
 
+// UploadImage using for post image to mongo atlas
 func UploadImage(c echo.Context) (err error) {
 	tlsConfig := &tls.Config{}
-	dialInfo, err := mgo.ParseURL(mongo_host)
+	dialInfo, err := mgo.ParseURL(mongoHost)
 
 	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
 		return tls.Dial("tcp", addr.String(), tlsConfig)
@@ -184,8 +195,8 @@ func UploadImage(c echo.Context) (err error) {
 		fmt.Println("Can't connect database:", err)
 		return c.String(http.StatusInternalServerError, "Oh!, Can't connect database.")
 	}
-	defer src.Close()
-	var imgprofile model.ImageProfile
+	defer session.Close()
+	var imgprofile ImageProfile
 	imgprofile.Username = c.FormValue("username")
 	file, err := c.FormFile("avatar")
 	if err != nil {
@@ -200,9 +211,9 @@ func UploadImage(c echo.Context) (err error) {
 	content, _ := ioutil.ReadAll(reader)
 	img, _, err := image.Decode(bytes.NewReader(content))
 	if err != nil {
-		m := resize.Resize(250, 250, img, resize.Lanczos3)
+		imageResized := resize.Resize(250, 250, img, resize.Lanczos3)
 		buf := new(bytes.Buffer)
-		err = png.Encode(buf, m)
+		err = png.Encode(buf, imageResized)
 		imageBit := buf.Bytes()
 		photoBase64 := base64.StdEncoding.EncodeToString(imageBit)
 		fmt.Println(photoBase64)
@@ -216,9 +227,9 @@ func UploadImage(c echo.Context) (err error) {
 		}
 		return c.JSON(http.StatusCreated, imgprofile)
 	}
-	m := resize.Resize(250, 250, img, resize.Lanczos3)
+	imageResized := resize.Resize(250, 250, img, resize.Lanczos3)
 	buf := new(bytes.Buffer)
-	err = jpeg.Encode(buf, m, nil)
+	err = jpeg.Encode(buf, imageResized, nil)
 	imageBit := buf.Bytes()
 	photoBase64 := base64.StdEncoding.EncodeToString(imageBit)
 	fmt.Println(photoBase64)
