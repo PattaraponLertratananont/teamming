@@ -44,13 +44,6 @@ type Profile struct {
 	Time         string        `json:"time" bson:"time"`
 }
 
-// ImageProfile is struct to get image form data
-type ImageProfile struct {
-	ID       bson.ObjectId `json:"id" bson:"_id,omitempty"`
-	Username string        `json:"username" bson:"username,omitempty"`
-	Avatar   string        `json:"avatar" bson:"avatar,omitempty"`
-}
-
 const (
 	mongoHost = "mongodb://admin:muyon@teamming-shard-00-00-odfpd.mongodb.net:27017,teamming-shard-00-01-odfpd.mongodb.net:27017,teamming-shard-00-02-odfpd.mongodb.net:27017/test?&replicaSet=Teamming-shard-0&authSource=admin"
 )
@@ -78,8 +71,7 @@ func main() {
 	// Query all data
 	e.GET("/read", Getdata)
 	e.POST("/post", Postdata)
-	e.GET("/image/:username", GetImage)
-	e.POST("/image/upload", UploadImage)
+	e.PUT("/image/upload", UploadImage)
 
 	// Start server
 	e.Logger.Fatal(e.Start(getPort()))
@@ -151,35 +143,6 @@ func Postdata(c echo.Context) (err error) {
 		return c.String(http.StatusInternalServerError, "Error! <=from Insert mongo.")
 	}
 	return c.JSON(http.StatusCreated, "Post successfully!") //* Done!
-}
-
-// GetImage using for get image form mongo atlas
-func GetImage(c echo.Context) (err error) {
-	tlsConfig := &tls.Config{}
-	dialInfo, err := mgo.ParseURL(mongoHost)
-
-	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
-		return tls.Dial("tcp", addr.String(), tlsConfig)
-	}
-
-	session, err := mgo.DialWithInfo(dialInfo)
-	if err != nil {
-		fmt.Println("Can't connect database:", err)
-		return c.String(http.StatusInternalServerError, "Oh!, Can't connect database.")
-	}
-	defer session.Close()
-	//image get
-	username := c.Param("username")
-	//img, err := h.FindByUsername(username)
-	fmt.Println(username)
-	var imagepro *ImageProfile
-	s := session.DB(dbname).C("image")                                                            //* Choose Database and Collection
-	err = s.Find(bson.M{"username": string(username)}).Select(bson.M{"avatar": 1}).One(&imagepro) //* Delve all data
-	if err != nil {
-		fmt.Println("Error query mongo:", err)
-	}
-	img2html := "<html><body><img src=\"data:image/png;base64," + imagepro.Avatar + "\" /></body></html>"
-	return c.HTML(http.StatusOK, img2html) //* Done (return data to API)
 }
 
 // UploadImage using for post image to mongo atlas
