@@ -17,11 +17,11 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/nfnt/resize"
-	mgo "gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
 
 // Profile is struct to get detail form data
