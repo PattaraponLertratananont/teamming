@@ -3,15 +3,8 @@ package main
 //! Golang(API) =>Echo + Mondgo Atlas
 
 import (
-	"bufio"
-	"bytes"
 	"crypto/tls"
-	"encoding/base64"
 	"fmt"
-	"image"
-	"image/jpeg"
-	"image/png"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -21,7 +14,6 @@ import (
 	"github.com/globalsign/mgo/bson"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-	"github.com/nfnt/resize"
 )
 
 // Profile is struct to get detail form data
@@ -56,8 +48,8 @@ const (
 )
 
 const (
-	dbname     = "user"
-	collection = "users"
+	dbname     = "teammate"
+	collection = "profile"
 )
 
 func main() {
@@ -77,8 +69,8 @@ func main() {
 	})
 	// Query all data
 	e.GET("/read", Getdata)
-	e.POST("/post", Postdata)
-	e.PUT("/image/upload", UploadImage)
+	e.POST("/register", Postdata)
+	e.PUT("/updateavatar", UploadImage)
 	e.GET("/image/:username", GetImage)
 
 	// Start server
@@ -164,48 +156,14 @@ func UploadImage(c echo.Context) (err error) {
 		return c.String(http.StatusInternalServerError, "Oh!, Can't connect database.")
 	}
 	defer session.Close()
-	// image upload
-	var imgprofile Profile
-	imgprofile.Username = c.FormValue("username")
-	file, err := c.FormFile("avatar")
+
+	var imgprofile ImageProfile
+	err = c.Bind(&imgprofile) //* Receive data from Body(API)
 	if err != nil {
-		return err
+		log.Println("Error: from c.Bind()")
+		return c.String(http.StatusInternalServerError, "Error: from c.Bind()")
 	}
-	src, err := file.Open()
-	if err != nil {
-		return err
-	}
-	defer src.Close()
-	reader := bufio.NewReader(src)
-	content, _ := ioutil.ReadAll(reader)
-	img, _, err := image.Decode(bytes.NewReader(content))
-	if err != nil {
-		imageResized := resize.Resize(250, 250, img, resize.Lanczos3)
-		buf := new(bytes.Buffer)
-		err = png.Encode(buf, imageResized)
-		imageBit := buf.Bytes()
-		photoBase64 := base64.StdEncoding.EncodeToString(imageBit)
-		//fmt.Println(photoBase64)
-		imgprofile.Avatar = photoBase64
-		if imgprofile.Username == "" { //* Forbid blank name and telno.
-			return &echo.HTTPError{Code: http.StatusBadRequest, Message: "invalid to or message fields"}
-		}
-		err = session.DB(dbname).C(collection).Update(bson.M{"username": string(imgprofile.Username)}, bson.M{"$set": bson.M{"avatar": string(imgprofile.Avatar)}}) //* Choose database, collection and insert data
-		if err != nil {
-			return c.String(http.StatusInternalServerError, "Error! <=from Update mongo.")
-		}
-		return c.JSON(http.StatusCreated, "Update successfully!")
-	}
-	imageResized := resize.Resize(250, 250, img, resize.Lanczos3)
-	buf := new(bytes.Buffer)
-	err = jpeg.Encode(buf, imageResized, nil)
-	imageBit := buf.Bytes()
-	photoBase64 := base64.StdEncoding.EncodeToString(imageBit)
-	//fmt.Println(photoBase64)
-	imgprofile.Avatar = photoBase64
-	if imgprofile.Username == "" { //* Forbid blank name and telno.
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "invalid to or message fields"}
-	}
+	fmt.Println(imgprofile)
 	err = session.DB(dbname).C(collection).Update(bson.M{"username": string(imgprofile.Username)}, bson.M{"$set": bson.M{"avatar": string(imgprofile.Avatar)}}) //* Choose database, collection and insert data
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Error! <=from Update mongo.")
@@ -229,8 +187,7 @@ func GetImage(c echo.Context) (err error) {
 	}
 	defer session.Close()
 	username := c.Param("username")
-	//img, err := h.FindByUsername(username)
-	fmt.Println(username)
+	// fmt.Println(username)
 	var imagepro Profile
 
 	err = session.DB(dbname).C(collection).Find(bson.M{"username": string(username)}).Select(bson.M{"avatar": 1}).One(&imagepro) //* Delve all data
