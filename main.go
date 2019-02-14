@@ -198,7 +198,7 @@ func UploadImage(c echo.Context) (err error) {
 	}
 	defer session.Close()
 	// image upload
-	var imgprofile ImageProfile
+	var imgprofile Profile
 	imgprofile.Username = c.FormValue("username")
 	file, err := c.FormFile("avatar")
 	if err != nil {
@@ -223,7 +223,7 @@ func UploadImage(c echo.Context) (err error) {
 		if imgprofile.Username == "" { //* Forbid blank name and telno.
 			return &echo.HTTPError{Code: http.StatusBadRequest, Message: "invalid to or message fields"}
 		}
-		err = session.DB(dbname).C("image").Insert(imgprofile) //* Choose database, collection and insert data
+		err = session.DB(dbname).C("image").Update(bson.M{"username": imgprofile.Username}, bson.M{"avatar": imgprofile.Avatar}) //* Choose database, collection and insert data
 		if err != nil {
 			return c.String(http.StatusInternalServerError, "Error! <=from Insert mongo.")
 		}
