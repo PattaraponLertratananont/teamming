@@ -292,6 +292,10 @@ func UpdateTimeAndLocation(c echo.Context) (err error) {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Error! <=from Update Location in mongo.")
 	}
+	err = session.DB(dbname).C(collection).Update(bson.M{"username": string(imgprofile.Username)}, bson.M{"$set": bson.M{"date": string(imgprofile.Date)}}) //* Choose database, collection and insert data
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Error! <=from Update Date in mongo.")
+	}
 	return c.JSON(http.StatusCreated, "Update successfully!") //* Done!
 }
 
