@@ -40,6 +40,7 @@ type Profile struct {
 	Mobileoslogo string        `json:"mobileoslogo" bson:"mobileoslogo"`
 	Locate       string        `json:"locate" bson:"locate"`
 	Time         string        `json:"time" bson:"time"`
+	Date         string        `json:"date" bson:"date"`
 }
 
 // ImageProfile is struct to update detail in data
@@ -83,6 +84,7 @@ func main() {
 	e.PUT("/telno", UpdateTelNumber)
 	e.PUT("/email", UpdateEmail)
 	e.PUT("/team", UpdateTeam)
+	e.GET("/sort", SortDateAndTime)
 
 	// Start server
 	e.Logger.Fatal(e.Start(getPort()))
@@ -138,7 +140,7 @@ func Postdata(c echo.Context) (err error) {
 	}
 	defer session.Close()
 
-	var profiles Profile
+	var profiles ImageProfile
 	profiles.ID = bson.NewObjectId()
 	err = c.Bind(&profiles) //* Receive data from Body(API)
 	if err != nil {
@@ -378,4 +380,59 @@ func UpdateTeam(c echo.Context) (err error) {
 		return c.String(http.StatusInternalServerError, "Error! <=from Update Team in mongo.")
 	}
 	return c.JSON(http.StatusCreated, "Update successfully!") //* Done!
+}
+
+// UpdatePassword using for update password in mongo atlas
+func UpdatePassword(c echo.Context) (err error) {
+	tlsConfig := &tls.Config{}
+	dialInfo, err := mgo.ParseURL(mongoHost)
+
+	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		return tls.Dial("tcp", addr.String(), tlsConfig)
+	}
+
+	session, err := mgo.DialWithInfo(dialInfo)
+	if err != nil {
+		fmt.Println("Can't connect database:", err)
+		return c.String(http.StatusInternalServerError, "Oh!, Can't connect database.")
+	}
+	defer session.Close()
+
+	var imgprofile Profile
+	err = c.Bind(&imgprofile) //* Receive data from Body(API)
+	if err != nil {
+		log.Println("Error: from c.Bind()")
+		return c.String(http.StatusInternalServerError, "Error: from c.Bind()")
+	}
+	err = session.DB(dbname).C(collection).Update(bson.M{"username": string(imgprofile.Username)}, bson.M{"$set": bson.M{"password": string(imgprofile.Password)}}) //* Choose database, collection and insert data
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Error! <=from Update Password in mongo.")
+	}
+	return c.JSON(http.StatusCreated, "Update successfully!") //* Done!
+}
+
+// SortDateAndTime using for get date and time in mongo atlas
+func SortDateAndTime(c echo.Context) (err error) {
+	tlsConfig := &tls.Config{}
+	dialInfo, err := mgo.ParseURL(mongoHost)
+
+	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		return tls.Dial("tcp", addr.String(), tlsConfig)
+	}
+
+	session, err := mgo.DialWithInfo(dialInfo)
+	if err != nil {
+		fmt.Println("Can't connect database:", err)
+		return c.String(http.StatusInternalServerError, "Oh!, Can't connect database.")
+	}
+	defer session.Close()
+
+	var profiles []Profile
+	err = session.DB(dbname).C(collection).Find(bson.M{}).Sort("-date", "-time").All(&profiles)
+	if err != nil {
+		fmt.Println("Error query mongo:", err)
+	}
+
+	return c.JSON(http.StatusOK, profiles)
+
 }
