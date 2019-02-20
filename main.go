@@ -43,13 +43,6 @@ type Profile struct {
 	Date         string        `json:"date" bson:"date"`
 }
 
-// ImageProfile is struct to update detail in data
-type ImageProfile struct {
-	ID       bson.ObjectId `json:"id" bson:"_id,omitempty"`
-	Username string        `json:"username" bson:"username,omitempty"`
-	Avatar   string        `json:"avatar" bson:"avatar,omitempty"`
-}
-
 const (
 	// mongoHost = "mongodb://127.0.0.1:27017"
 	mongoHost = "mongodb://admin:muyon@teamming-shard-00-00-odfpd.mongodb.net:27017,teamming-shard-00-01-odfpd.mongodb.net:27017,teamming-shard-00-02-odfpd.mongodb.net:27017/test?&replicaSet=Teamming-shard-0&authSource=admin"
@@ -140,7 +133,7 @@ func Postdata(c echo.Context) (err error) {
 	}
 	defer session.Close()
 
-	var profiles ImageProfile
+	var profiles Profile
 	profiles.ID = bson.NewObjectId()
 	err = c.Bind(&profiles) //* Receive data from Body(API)
 	if err != nil {
@@ -208,34 +201,6 @@ func UploadImage(c echo.Context) (err error) {
 	}
 	return c.JSON(http.StatusCreated, "Update successfully!") //* Done!
 }
-
-// func UploadImage(c echo.Context) (err error) {
-// 	tlsConfig := &tls.Config{}
-// 	dialInfo, err := mgo.ParseURL(mongoHost)
-
-// 	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
-// 		return tls.Dial("tcp", addr.String(), tlsConfig)
-// 	}
-
-// 	session, err := mgo.DialWithInfo(dialInfo)
-// 	if err != nil {
-// 		fmt.Println("Can't connect database:", err)
-// 		return c.String(http.StatusInternalServerError, "Oh!, Can't connect database.")
-// 	}
-// 	defer session.Close()
-
-// 	var imgprofile Profile
-// 	err = c.Bind(&imgprofile) //* Receive data from Body(API)
-// 	if err != nil {
-// 		log.Println("Error: from c.Bind()")
-// 		return c.String(http.StatusInternalServerError, "Error: from c.Bind()")
-// 	}
-// 	err = session.DB(dbname).C(collection).Update(bson.M{"username": string(imgprofile.Username)}, bson.M{"$set": bson.M{"avatar": string(imgprofile.Avatar)}}) //* Choose database, collection and insert data
-// 	if err != nil {
-// 		return c.String(http.StatusInternalServerError, "Error! <=from Update mongo.")
-// 	}
-// 	return c.JSON(http.StatusCreated, "Update successfully!") //* Done!
-// }
 
 // GetImage using for get image in mongo atlas
 func GetImage(c echo.Context) (err error) {
