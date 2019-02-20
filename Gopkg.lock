@@ -10,6 +10,14 @@
   version = "v3.2.0"
 
 [[projects]]
+  digest = "1:47cebe27e59e4e0c239d0bf2419d6a46f0364a56efc43be702c32b82710b6ecf"
+  name = "github.com/disintegration/imaging"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "5362c131d56305ce787e79a5b94ffc956df00d62"
+  version = "v1.6.0"
+
+[[projects]]
   branch = "master"
   digest = "1:78102ee4d536347316bc42e818340cc50902e45dbd7fdd524c5a1fc0cb07b588"
   name = "github.com/globalsign/mgo"
@@ -92,6 +100,18 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:acadbbf02e5c744709c60ac929e63258a69a3404ab36ed0c1a245cc28f056220"
+  name = "golang.org/x/image"
+  packages = [
+    "bmp",
+    "tiff",
+    "tiff/lzw",
+  ]
+  pruneopts = "UT"
+  revision = "ef4a1470e0dc5915f2f5fa04a28eeab72c6936a4"
+
+[[projects]]
+  branch = "master"
   digest = "1:8b466798e96432c23185ca32826702885299f94eb644c9a8dedb79771dff383a"
   name = "golang.org/x/sys"
   packages = ["unix"]
@@ -102,6 +122,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/disintegration/imaging",
     "github.com/globalsign/mgo",
     "github.com/globalsign/mgo/bson",
     "github.com/labstack/echo",

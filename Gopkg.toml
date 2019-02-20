@@ -32,11 +32,7 @@
 [[constraint]]
   name = "github.com/labstack/echo"
   version = "3.3.10"
-
-[[constraint]]
-  branch = "v2"
-  name = "gopkg.in/mgo.v2"
-
+  
 [prune]
   go-tests = true
   unused-packages = true

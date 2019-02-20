@@ -15,8 +15,8 @@ import (
 	"github.com/disintegration/imaging"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
-	"github.com/kachawut/api_test/teamming/model"
 	"github.com/labstack/echo"
+	"github.com/teamming/model"
 )
 
 const (

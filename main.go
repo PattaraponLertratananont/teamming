@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/kachawut/api_test/teamming/getmethod"
-	"github.com/kachawut/api_test/teamming/postmethod"
-	"github.com/kachawut/api_test/teamming/updatemethod"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/teamming/getmethod"
+	"github.com/teamming/postmethod"
+	"github.com/teamming/updatemethod"
 )
 
 func main() {
