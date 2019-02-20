@@ -24,15 +24,19 @@
 #   go-tests = true
 #   unused-packages = true
 
-[metadata.heroku]
-  root-package = "github.com/PattaraponLertratananont/teamming"
-  go-version = "1.11.4"
-  install = [ "./..." ]
+
+[[constraint]]
+  name = "github.com/disintegration/imaging"
+  version = "1.6.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/globalsign/mgo"
 
 [[constraint]]
   name = "github.com/labstack/echo"
   version = "3.3.10"
-  
+
 [prune]
   go-tests = true
   unused-packages = true
