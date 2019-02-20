@@ -4,12 +4,14 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/base64"
 	"fmt"
 	"image"
 	"image/jpeg"
 	"image/png"
 	"log"
+	"net"
 	"net/http"
 	"os"
 
@@ -42,13 +44,15 @@ type Profile struct {
 }
 
 const (
-	mongoHost = "mongodb://127.0.0.1:27017"
-	// mongoHost = "mongodb://admin:muyon@teamming-shard-00-00-odfpd.mongodb.net:27017,teamming-shard-00-01-odfpd.mongodb.net:27017,teamming-shard-00-02-odfpd.mongodb.net:27017/test?&replicaSet=Teamming-shard-0&authSource=admin"
+	// mongoHost = "mongodb://127.0.0.1:27017"
+	mongoHost = "mongodb://admin:muyon@teamming-shard-00-00-odfpd.mongodb.net:27017,teamming-shard-00-01-odfpd.mongodb.net:27017,teamming-shard-00-02-odfpd.mongodb.net:27017/test?&replicaSet=Teamming-shard-0&authSource=admin"
 )
 
 const (
-	dbname     = "use"
-	collection = "users"
+	dbname     = "teammate"
+	collection = "profile"
+	// dbname     = "user"
+	// collection = "users"
 )
 
 func main() {
@@ -91,12 +95,12 @@ func getPort() string {
 
 // Getdata using for get data form mongo atlas
 func Getdata(c echo.Context) (err error) {
-	// tlsConfig := &tls.Config{}
+	tlsConfig := &tls.Config{}
 	dialInfo, err := mgo.ParseURL(mongoHost)
 
-	// dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
-	// 	return tls.Dial("tcp", addr.String(), tlsConfig)
-	// }
+	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		return tls.Dial("tcp", addr.String(), tlsConfig)
+	}
 
 	session, err := mgo.DialWithInfo(dialInfo)
 	if err != nil {
@@ -117,12 +121,12 @@ func Getdata(c echo.Context) (err error) {
 
 // Postdata using for post data to mongo atlas
 func Postdata(c echo.Context) (err error) {
-	// tlsConfig := &tls.Config{}
+	tlsConfig := &tls.Config{}
 	dialInfo, err := mgo.ParseURL(mongoHost)
 
-	// dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
-	// 	return tls.Dial("tcp", addr.String(), tlsConfig)
-	// }
+	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		return tls.Dial("tcp", addr.String(), tlsConfig)
+	}
 
 	session, err := mgo.DialWithInfo(dialInfo)
 	if err != nil {
@@ -147,12 +151,12 @@ func Postdata(c echo.Context) (err error) {
 
 // UploadImage using for post image to mongo atlas
 func UploadImage(c echo.Context) (err error) {
-	// tlsConfig := &tls.Config{}
+	tlsConfig := &tls.Config{}
 	dialInfo, err := mgo.ParseURL(mongoHost)
 
-	// dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
-	// 	return tls.Dial("tcp", addr.String(), tlsConfig)
-	// }
+	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		return tls.Dial("tcp", addr.String(), tlsConfig)
+	}
 	session, err := mgo.DialWithInfo(dialInfo)
 	if err != nil {
 		fmt.Println("Can't connect database:", err)
@@ -202,12 +206,12 @@ func UploadImage(c echo.Context) (err error) {
 
 // GetImage using for get image in mongo atlas
 func GetImage(c echo.Context) (err error) {
-	// tlsConfig := &tls.Config{}
+	tlsConfig := &tls.Config{}
 	dialInfo, err := mgo.ParseURL(mongoHost)
 
-	// dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
-	// 	return tls.Dial("tcp", addr.String(), tlsConfig)
-	// }
+	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		return tls.Dial("tcp", addr.String(), tlsConfig)
+	}
 
 	session, err := mgo.DialWithInfo(dialInfo)
 	if err != nil {
@@ -227,12 +231,12 @@ func GetImage(c echo.Context) (err error) {
 
 // UpdateTimeAndLocation using for update time and location in mongo atlas
 func UpdateTimeAndLocation(c echo.Context) (err error) {
-	// tlsConfig := &tls.Config{}
+	tlsConfig := &tls.Config{}
 	dialInfo, err := mgo.ParseURL(mongoHost)
 
-	// dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
-	// 	return tls.Dial("tcp", addr.String(), tlsConfig)
-	// }
+	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		return tls.Dial("tcp", addr.String(), tlsConfig)
+	}
 
 	session, err := mgo.DialWithInfo(dialInfo)
 	if err != nil {
@@ -264,12 +268,12 @@ func UpdateTimeAndLocation(c echo.Context) (err error) {
 
 // UpdateTelNumber using for update TelNumber in mongo atlas
 func UpdateTelNumber(c echo.Context) (err error) {
-	// tlsConfig := &tls.Config{}
+	tlsConfig := &tls.Config{}
 	dialInfo, err := mgo.ParseURL(mongoHost)
 
-	// dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
-	// 	return tls.Dial("tcp", addr.String(), tlsConfig)
-	// }
+	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		return tls.Dial("tcp", addr.String(), tlsConfig)
+	}
 
 	session, err := mgo.DialWithInfo(dialInfo)
 	if err != nil {
@@ -293,12 +297,12 @@ func UpdateTelNumber(c echo.Context) (err error) {
 
 // UpdateEmail using for update Email in mongo atlas
 func UpdateEmail(c echo.Context) (err error) {
-	// tlsConfig := &tls.Config{}
+	tlsConfig := &tls.Config{}
 	dialInfo, err := mgo.ParseURL(mongoHost)
 
-	// dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
-	// 	return tls.Dial("tcp", addr.String(), tlsConfig)
-	// }
+	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		return tls.Dial("tcp", addr.String(), tlsConfig)
+	}
 
 	session, err := mgo.DialWithInfo(dialInfo)
 	if err != nil {
@@ -322,12 +326,12 @@ func UpdateEmail(c echo.Context) (err error) {
 
 // UpdateTeam using for update Team in mongo atlas
 func UpdateTeam(c echo.Context) (err error) {
-	// tlsConfig := &tls.Config{}
+	tlsConfig := &tls.Config{}
 	dialInfo, err := mgo.ParseURL(mongoHost)
 
-	// dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
-	// 	return tls.Dial("tcp", addr.String(), tlsConfig)
-	// }
+	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		return tls.Dial("tcp", addr.String(), tlsConfig)
+	}
 
 	session, err := mgo.DialWithInfo(dialInfo)
 	if err != nil {
@@ -351,12 +355,12 @@ func UpdateTeam(c echo.Context) (err error) {
 
 // UpdatePassword using for update password in mongo atlas
 func UpdatePassword(c echo.Context) (err error) {
-	// tlsConfig := &tls.Config{}
+	tlsConfig := &tls.Config{}
 	dialInfo, err := mgo.ParseURL(mongoHost)
 
-	// dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
-	// 	return tls.Dial("tcp", addr.String(), tlsConfig)
-	// }
+	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		return tls.Dial("tcp", addr.String(), tlsConfig)
+	}
 
 	session, err := mgo.DialWithInfo(dialInfo)
 	if err != nil {
@@ -380,12 +384,12 @@ func UpdatePassword(c echo.Context) (err error) {
 
 // SortDateAndTime using for get date and time in mongo atlas
 func SortDateAndTime(c echo.Context) (err error) {
-	// tlsConfig := &tls.Config{}
+	tlsConfig := &tls.Config{}
 	dialInfo, err := mgo.ParseURL(mongoHost)
 
-	// dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
-	// 	return tls.Dial("tcp", addr.String(), tlsConfig)
-	// }
+	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		return tls.Dial("tcp", addr.String(), tlsConfig)
+	}
 
 	session, err := mgo.DialWithInfo(dialInfo)
 	if err != nil {
