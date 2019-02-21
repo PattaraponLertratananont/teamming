@@ -108,7 +108,7 @@ func getPort() string {
 
 // Getdata using for get data form mongo atlas
 func Getdata(c echo.Context) (err error) {
-	// tlsConfig := &tls.Config{}
+	tlsConfig := &tls.Config{}
 	dialInfo, err := mgo.ParseURL(mongoHost)
 
 	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
