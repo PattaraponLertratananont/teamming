@@ -91,6 +91,7 @@ func main() {
 	e.PUT("/team", UpdateTeam)
 	e.GET("/sort", SortDateAndTime)
 	e.PUT("/forgetpassword", RandomCode)
+	e.DELETE("/delete", DeleteUser)
 
 	// Start server
 	e.Logger.Fatal(e.Start(getPort()))
@@ -122,6 +123,7 @@ func Getdata(c echo.Context) (err error) {
 
 	var profiles []Profile
 	err = session.DB(dbname).C(collection).Find(bson.M{}).Sort("name").All(&profiles)
+	// err = session.DB(dbname).C(collection).Find(bson.M{}).All(&profiles)
 	if err != nil {
 		fmt.Println("Error query mongo:", err)
 	}
@@ -415,10 +417,11 @@ func SortDateAndTime(c echo.Context) (err error) {
 		fmt.Println("Error query mongo:", err)
 	}
 
-	return c.JSON(http.StatusOK, "Update successfully!")
+	return c.JSON(http.StatusOK, profiles)
 
 }
 
+// RandomCode using for gen new password in mongo atlas
 func RandomCode(c echo.Context) (err error) {
 	tlsConfig := &tls.Config{}
 	dialInfo, err := mgo.ParseURL(mongoHost)
@@ -454,4 +457,31 @@ func RandomCode(c echo.Context) (err error) {
 	}
 	return c.JSON(http.StatusCreated, "Update successfully!") //* Done!
 
+}
+func DeleteUser(c echo.Context) (err error) {
+	tlsConfig := &tls.Config{}
+	dialInfo, err := mgo.ParseURL(mongoHost)
+
+	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		return tls.Dial("tcp", addr.String(), tlsConfig)
+	}
+
+	session, err := mgo.DialWithInfo(dialInfo)
+	if err != nil {
+		fmt.Println("Can't connect database:", err)
+		return c.String(http.StatusInternalServerError, "Oh!, Can't connect database.")
+	}
+	defer session.Close()
+
+	var imgprofile Profile
+	err = c.Bind(&imgprofile) //* Receive data from Body(API)
+	if err != nil {
+		log.Println("Error: from c.Bind()")
+		return c.String(http.StatusInternalServerError, "Error: from c.Bind()")
+	}
+	err = session.DB(dbname).C(collection).Remove(bson.M{"username": string(imgprofile.Username)}) //* Choose database, collection and insert data
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Error! <=from Can't Find  This Username .")
+	}
+	return c.JSON(http.StatusCreated, "Data has been Deleted !") //* Done!
 }
