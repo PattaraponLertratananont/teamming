@@ -110,7 +110,7 @@ func Getdata(c echo.Context) (err error) {
 	defer session.Close()
 
 	var profiles []Profile
-	err = session.DB(dbname).C(collection).Find(bson.M{}).Limit(100).All(&profiles)
+	err = session.DB(dbname).C(collection).Find(bson.M{}).Sort("name").All(&profiles)
 	if err != nil {
 		fmt.Println("Error query mongo:", err)
 	}
