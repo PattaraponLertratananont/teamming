@@ -11,9 +11,11 @@ import (
 	"image/jpeg"
 	"image/png"
 	"log"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/disintegration/imaging"
 	"github.com/globalsign/mgo"
@@ -54,6 +56,14 @@ const (
 	// dbname     = "user"
 	// collection = "users"
 )
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+const (
+	letterIdxBits = 6                    // 6 bits to represent a letter index
+	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
+	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
+)
+
+var src = rand.NewSource(time.Now().UnixNano())
 
 func main() {
 	// Echo instance
@@ -80,6 +90,7 @@ func main() {
 	e.PUT("/email", UpdateEmail)
 	e.PUT("/team", UpdateTeam)
 	e.GET("/sort", SortDateAndTime)
+	e.PUT("/forgetpassword", RandomCode)
 
 	// Start server
 	e.Logger.Fatal(e.Start(getPort()))
@@ -404,6 +415,43 @@ func SortDateAndTime(c echo.Context) (err error) {
 		fmt.Println("Error query mongo:", err)
 	}
 
-	return c.JSON(http.StatusOK, profiles)
+	return c.JSON(http.StatusOK, "Update successfully!")
+
+}
+
+func RandomCode(c echo.Context) (err error) {
+	tlsConfig := &tls.Config{}
+	dialInfo, err := mgo.ParseURL(mongoHost)
+
+	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		return tls.Dial("tcp", addr.String(), tlsConfig)
+	}
+
+	session, err := mgo.DialWithInfo(dialInfo)
+	if err != nil {
+		fmt.Println("Can't connect database:", err)
+		return c.String(http.StatusInternalServerError, "Oh!, Can't connect database.")
+	}
+	defer session.Close()
+	var profiles Profile
+	err = c.Bind(&profiles) //* Receive data from Body(API)
+	rancode := make([]byte, 8)
+	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
+	for i, cache, remain := 8-1, src.Int63(), letterIdxMax; i >= 0; {
+		if remain == 0 {
+			cache, remain = src.Int63(), letterIdxMax
+		}
+		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
+			rancode[i] = letterBytes[idx]
+			i--
+		}
+		cache >>= letterIdxBits
+		remain--
+	}
+	err = session.DB(dbname).C(collection).Update(bson.M{"username": string(profiles.Username)}, bson.M{"$set": bson.M{"password": string(rancode)}}) //* Choose database, collection and insert data
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Error! <=from Update Password in mongo.")
+	}
+	return c.JSON(http.StatusCreated, "Update successfully!") //* Done!
 
 }
