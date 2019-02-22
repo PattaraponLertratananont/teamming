@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -15,6 +16,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/disintegration/imaging"
@@ -43,6 +45,9 @@ type Profile struct {
 	Locate       string        `json:"locate" bson:"locate"`
 	Time         string        `json:"time" bson:"time"`
 	Date         string        `json:"date" bson:"date"`
+}
+type Teamlist struct {
+	Team string `json:"team" bson:"team"`
 }
 
 const (
@@ -507,7 +512,17 @@ func GetTeam(c echo.Context) (err error) {
 	if err != nil {
 		fmt.Println("Error query mongo:", err)
 	}
-	var m = map[string][]string{"team": data}
+	var d []string
+	for i := 0; i < len(data); i++ {
+		d = append(d, `{"team":"`+data[i]+`"}`)
+	}
+	str := strings.Join(d, ",")
+	var m []Teamlist
+	err = json.Unmarshal([]byte("["+str+"]"), &m)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	fmt.Printf("%+v", str)
 
 	return c.JSON(http.StatusOK, m)
 
