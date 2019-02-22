@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -16,7 +15,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/disintegration/imaging"
@@ -45,9 +43,6 @@ type Profile struct {
 	Locate       string        `json:"locate" bson:"locate"`
 	Time         string        `json:"time" bson:"time"`
 	Date         string        `json:"date" bson:"date"`
-}
-type Teamlist struct {
-	Team string `json:"team" bson:"team"`
 }
 
 const (
@@ -98,6 +93,7 @@ func main() {
 	e.PUT("/forgetpassword", RandomCode)
 	e.DELETE("/delete", DeleteUser)
 	e.GET("/teamlist", GetTeam)
+	e.GET("/teamlist/:team", GetTeamMember)
 
 	// Start server
 	e.Logger.Fatal(e.Start(getPort()))
@@ -464,6 +460,8 @@ func RandomCode(c echo.Context) (err error) {
 	return c.JSON(http.StatusCreated, "Update successfully!") //* Done!
 
 }
+
+// DeleteUser using for Delete data in mongo atlas
 func DeleteUser(c echo.Context) (err error) {
 	tlsConfig := &tls.Config{}
 	dialInfo, err := mgo.ParseURL(mongoHost)
@@ -492,6 +490,7 @@ func DeleteUser(c echo.Context) (err error) {
 	return c.JSON(http.StatusCreated, "Data has been Deleted !") //* Done!
 }
 
+// GetTeam using for Query data in mongo atlas
 func GetTeam(c echo.Context) (err error) {
 	tlsConfig := &tls.Config{}
 	dialInfo, err := mgo.ParseURL(mongoHost)
@@ -512,18 +511,33 @@ func GetTeam(c echo.Context) (err error) {
 	if err != nil {
 		fmt.Println("Error query mongo:", err)
 	}
-	var d []string
-	for i := 0; i < len(data); i++ {
-		d = append(d, `{"team":"`+data[i]+`"}`)
-	}
-	str := strings.Join(d, ",")
-	var m []Teamlist
-	err = json.Unmarshal([]byte("["+str+"]"), &m)
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-	fmt.Printf("%+v", str)
+	var m = map[string][]string{"team": data}
 
 	return c.JSON(http.StatusOK, m)
 
+}
+
+// GetImage using for get image in mongo atlas
+func GetTeamMember(c echo.Context) (err error) {
+	tlsConfig := &tls.Config{}
+	dialInfo, err := mgo.ParseURL(mongoHost)
+
+	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		return tls.Dial("tcp", addr.String(), tlsConfig)
+	}
+
+	session, err := mgo.DialWithInfo(dialInfo)
+	if err != nil {
+		fmt.Println("Can't connect database:", err)
+		return c.String(http.StatusInternalServerError, "Oh!, Can't connect database.")
+	}
+	defer session.Close()
+	team := c.Param("team")
+	var profiles []Profile
+	err = session.DB(dbname).C(collection).Find(bson.M{"team": string(team)}).Sort("name").All(&profiles)
+	// err = session.DB(dbname).C(collection).Find(bson.M{}).All(&profiles)
+	if err != nil {
+		fmt.Println("Error query mongo:", err)
+	}
+	return c.JSON(http.StatusOK, profiles) //* Done (return data to API)
 }
