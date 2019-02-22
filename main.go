@@ -6,10 +6,13 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/base64"
+	"flag"
 	"fmt"
 	"image"
+	"image/color"
 	"image/jpeg"
 	"image/png"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net"
@@ -20,8 +23,11 @@ import (
 	"github.com/disintegration/imaging"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
+	"github.com/golang/freetype/truetype"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"golang.org/x/image/font"
+	"golang.org/x/image/math/fixed"
 )
 
 // Profile is struct to get detail form data
@@ -43,6 +49,10 @@ type Profile struct {
 	Locate       string        `json:"locate" bson:"locate"`
 	Time         string        `json:"time" bson:"time"`
 	Date         string        `json:"date" bson:"date"`
+}
+type captimg struct {
+	Image  string `json:"image"`
+	Answer string `json:"answer"`
 }
 
 const (
@@ -94,6 +104,7 @@ func main() {
 	e.DELETE("/delete", DeleteUser)
 	e.GET("/teamlist", GetTeam)
 	e.GET("/teamlist/:team", GetTeamMember)
+	e.GET("/captcha", Captcha)
 
 	// Start server
 	e.Logger.Fatal(e.Start(getPort()))
@@ -540,4 +551,95 @@ func GetTeamMember(c echo.Context) (err error) {
 		fmt.Println("Error query mongo:", err)
 	}
 	return c.JSON(http.StatusOK, profiles) //* Done (return data to API)
+}
+
+//**********************************************************************************************************************
+//**********************************************************************************************************************
+//**********************************************************************************************************************
+//**********************************************************************************************************************
+//**********************************************************************************************************************
+//**********************************************************************************************************************
+var (
+	dpi      = flag.Float64("dpi", 72, "screen resolution in Dots Per Inch")
+	fontfile = flag.String("fontfile", "../../testdata/luxisr.ttf", "FZHTJW.TTF")
+	hinting  = flag.String("hinting", "none", "none | full")
+	size     = flag.Float64("size", 80, "font size in points")
+	spacing  = flag.Float64("spacing", 1.5, "line spacing (e.g. 2 means double spaced)")
+	wonb     = flag.Bool("whiteonblack", false, "white text on a black background")
+)
+
+func addLabel(img *image.RGBA, x, y int, label string) {
+	flag.Parse()
+
+	// Read the font data.
+	fontBytes, err := ioutil.ReadFile("./FZHTJW.TTF")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	g, err := truetype.Parse(fontBytes)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	col := color.RGBA{200, 100, 0, 255}
+	point := fixed.Point26_6{fixed.Int26_6(x * 64), fixed.Int26_6(y * 64)}
+
+	d := &font.Drawer{
+		Dst: img,
+		Src: image.NewUniform(col),
+		Face: truetype.NewFace(g, &truetype.Options{
+			Size: *size,
+			DPI:  *dpi,
+		}),
+		Dot: point,
+	}
+	d.DrawString(label)
+}
+
+func Captcha(c echo.Context) (err error) {
+	tlsConfig := &tls.Config{}
+	dialInfo, err := mgo.ParseURL(mongoHost)
+
+	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+		return tls.Dial("tcp", addr.String(), tlsConfig)
+	}
+
+	session, err := mgo.DialWithInfo(dialInfo)
+	if err != nil {
+		fmt.Println("Can't connect database:", err)
+		return c.String(http.StatusInternalServerError, "Oh!, Can't connect database.")
+	}
+	defer session.Close()
+
+	rancode := make([]byte, 6)
+	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
+	for i, cache, remain := 6-1, src.Int63(), letterIdxMax; i >= 0; {
+		if remain == 0 {
+			cache, remain = src.Int63(), letterIdxMax
+		}
+		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
+			rancode[i] = letterBytes[idx]
+			i--
+		}
+		cache >>= letterIdxBits
+		remain--
+	}
+	img := image.NewRGBA(image.Rect(0, 0, 320, 200))
+	addLabel(img, 25, 110, string(rancode))
+	// f, err := os.Create("hello-go.png")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// defer f.Close()
+	var text captimg
+	buf := new(bytes.Buffer)
+	err = png.Encode(buf, img)
+	imageBit := buf.Bytes()
+	photoBase64 := base64.StdEncoding.EncodeToString(imageBit)
+	text.Answer = string(rancode)
+	text.Image = photoBase64
+
+	return c.JSON(http.StatusOK, text)
+
 }

@@ -32,6 +32,17 @@
   revision = "eeefdecb41b842af6dc652aaea4026e8403e62df"
 
 [[projects]]
+  branch = "master"
+  digest = "1:62c57507df491b657e9ae2645f30958d9964c8eeb380600469eedc951ebb3a0e"
+  name = "github.com/golang/freetype"
+  packages = [
+    "raster",
+    "truetype",
+  ]
+  pruneopts = "UT"
+  revision = "e2365dfdc4a05e4b8299a783240d4a7d5a65d4e4"
+
+[[projects]]
   digest = "1:efd601ad1d1189884f37ed075fadb5bbd17f1f5acf5862827247c6da56d125ba"
   name = "github.com/labstack/echo"
   packages = [
@@ -100,10 +111,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:acadbbf02e5c744709c60ac929e63258a69a3404ab36ed0c1a245cc28f056220"
+  digest = "1:8aabc191fd00a92f1880d1ee3383ee57b44df6e55d6e682d0a8f994309f58e36"
   name = "golang.org/x/image"
   packages = [
     "bmp",
+    "font",
+    "math/fixed",
     "tiff",
     "tiff/lzw",
   ]
@@ -125,8 +138,11 @@
     "github.com/disintegration/imaging",
     "github.com/globalsign/mgo",
     "github.com/globalsign/mgo/bson",
+    "github.com/golang/freetype/truetype",
     "github.com/labstack/echo",
     "github.com/labstack/echo/middleware",
+    "golang.org/x/image/font",
+    "golang.org/x/image/math/fixed",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
