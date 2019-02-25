@@ -4,8 +4,10 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha1"
 	"crypto/tls"
 	"encoding/base64"
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"image"
@@ -105,6 +107,7 @@ func main() {
 	e.GET("/teamlist", GetTeam)
 	e.GET("/teamlist/:team", GetTeamMember)
 	e.GET("/captcha", Captcha)
+	e.PUT("/password", UpdatePassword)
 
 	// Start server
 	e.Logger.Fatal(e.Start(getPort()))
@@ -135,8 +138,8 @@ func Getdata(c echo.Context) (err error) {
 	defer session.Close()
 
 	var profiles []Profile
-	err = session.DB(dbname).C(collection).Find(bson.M{}).Sort("name").All(&profiles)
-	// err = session.DB(dbname).C(collection).Find(bson.M{}).All(&profiles)
+	// err = session.DB(dbname).C(collection).Find(bson.M{}).Sort("name").All(&profiles)
+	err = session.DB(dbname).C(collection).Find(bson.M{}).All(&profiles)
 	if err != nil {
 		fmt.Println("Error query mongo:", err)
 	}
@@ -171,6 +174,13 @@ func Postdata(c echo.Context) (err error) {
 	err = session.DB(dbname).C(collection).Insert(profiles) //* Choose database, collection and insert data
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Error! <=from Insert mongo.")
+	}
+	hash := sha1.New()
+	hash.Write([]byte(profiles.Password))
+	sha1hash := hex.EncodeToString(hash.Sum(nil))
+	err = session.DB(dbname).C(collection).Update(bson.M{"username": string(profiles.Username)}, bson.M{"$set": bson.M{"password": sha1hash}}) //* Choose database, collection and insert data
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Error! <=from Update Password in mongo.")
 	}
 	return c.JSON(http.StatusCreated, "Post successfully!") //* Done!
 }
@@ -395,13 +405,16 @@ func UpdatePassword(c echo.Context) (err error) {
 	}
 	defer session.Close()
 
-	var imgprofile Profile
-	err = c.Bind(&imgprofile) //* Receive data from Body(API)
+	var Profiles Profile
+	err = c.Bind(&Profiles) //* Receive data from Body(API)
 	if err != nil {
 		log.Println("Error: from c.Bind()")
 		return c.String(http.StatusInternalServerError, "Error: from c.Bind()")
 	}
-	err = session.DB(dbname).C(collection).Update(bson.M{"username": string(imgprofile.Username)}, bson.M{"$set": bson.M{"password": string(imgprofile.Password)}}) //* Choose database, collection and insert data
+	hash := sha1.New()
+	hash.Write([]byte(Profiles.Password))
+	sha1hash := hex.EncodeToString(hash.Sum(nil))
+	err = session.DB(dbname).C(collection).Update(bson.M{"username": string(Profiles.Username)}, bson.M{"$set": bson.M{"password": sha1hash}}) //* Choose database, collection and insert data
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Error! <=from Update Password in mongo.")
 	}
@@ -598,12 +611,12 @@ func addLabel(img *image.RGBA, x, y int, label string) {
 }
 
 func Captcha(c echo.Context) (err error) {
-	tlsConfig := &tls.Config{}
+	// tlsConfig := &tls.Config{}
 	dialInfo, err := mgo.ParseURL(mongoHost)
 
-	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
-		return tls.Dial("tcp", addr.String(), tlsConfig)
-	}
+	// dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
+	// 	return tls.Dial("tcp", addr.String(), tlsConfig)
+	// }
 
 	session, err := mgo.DialWithInfo(dialInfo)
 	if err != nil {
