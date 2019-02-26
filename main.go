@@ -490,7 +490,7 @@ func RandomCode(c echo.Context) (err error) {
 	m.SetHeader("To", profiles.Email)
 	m.SetHeader("Subject", "Reset Password!")
 	m.SetBody("text/html", "Please log in with this new password : <b>"+string(rancode)+"</b>  .  You can change your password in edit your profile.")
-	d := gomail.NewDialer("smtp.gmail.com", 587, "techinno.teammate@gmail.com", "teammate@60")
+	d := gomail.NewPlainDialer("smtp.gmail.com", 587, "techinno.teammate@gmail.com", "teammate@60")
 	// Send the email to Bob, Cora and Dan.
 	if err := d.DialAndSend(m); err != nil {
 		panic(err)
@@ -580,7 +580,7 @@ func GetTeamMember(c echo.Context) (err error) {
 	team := c.Param("team")
 	var profiles []Profile
 	err = session.DB(dbname).C(collection).Find(bson.M{"team": string(team)}).Sort("name").All(&profiles)
-	// err = session.DB(dbname).C(collection).Find(bson.M{}).All(&profiles)
+
 	if err != nil {
 		fmt.Println("Error query mongo:", err)
 	}
